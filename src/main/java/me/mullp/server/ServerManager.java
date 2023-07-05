@@ -59,11 +59,16 @@ public class ServerManager {
         .thenApply(response -> Utilities.GSON.fromJson(response.getBody(), MyServersReply.class).getServers());
   }
 
+  /**
+   * Checks whether a server name is available or not
+   * @param serverName - The server name to check
+   * @return - Whether the name is available or not
+   */
   public @NotNull CompletableFuture<Boolean> isNameAvailable(@NotNull String serverName) {
     final String json = "{\"serverName\":\"" + serverName + "\"}";
 
     return this.minefortApi.getHttpClient().makeAuthenticatedPostRequest(MinefortApi.BASE_URL + "server/availability", json)
         .thenApply(this.minefortApi::checkResponse)
-        .thenApply(minefortHttpResponse -> Utilities.GSON.fromJson(minefortHttpResponse.getBody(), NameAvailableReply.class).isAvailable());
+        .thenApply(response -> Utilities.GSON.fromJson(response.getBody(), NameAvailableReply.class).isAvailable());
   }
 }

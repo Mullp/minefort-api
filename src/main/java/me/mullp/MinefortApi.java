@@ -5,35 +5,42 @@ import me.mullp.exceptions.BadStatusException;
 import me.mullp.http.ApacheHttpClient;
 import me.mullp.http.MinefortHttpClient;
 import me.mullp.http.MinefortHttpResponse;
+import me.mullp.icon.IconManager;
 import me.mullp.reply.StatusReply;
 import me.mullp.server.ServerManager;
 import me.mullp.util.Utilities;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 
 public class MinefortApi {
   public static final @NotNull String BASE_URL = "https://api.minefort.com/v1/";
   private final @NotNull MinefortHttpClient httpClient = new ApacheHttpClient();
 
   private final @NotNull ServerManager serverManager = new ServerManager(this);
+  private final @NotNull IconManager iconManager = new IconManager(this);
 
   public MinefortApi() {
   }
 
   public @NotNull MinefortHttpClient getHttpClient() {
-    return httpClient;
+    return this.httpClient;
   }
 
   public @NotNull ServerManager getServerManager() {
-    return serverManager;
+    return this.serverManager;
+  }
+
+  public @NotNull IconManager getIconManager() {
+    return this.iconManager;
   }
 
   public void shutdown() {
     this.httpClient.shutdown();
   }
 
-  public String authenticate(@NotNull String email, @NotNull String password) {
+  public CompletableFuture<String> authenticate(@NotNull String email, @NotNull String password) {
     String json = "{\"emailAddress\":\"" +
         email +
         "\",\"password\":\"" +
@@ -45,8 +52,7 @@ public class MinefortApi {
         .thenApply(sessionToken -> {
           this.httpClient.setSessionToken(sessionToken);
           return sessionToken;
-        })
-        .join();
+        });
   }
 
   public MinefortHttpResponse checkResponse(MinefortHttpResponse response) {
