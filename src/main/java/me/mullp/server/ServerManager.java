@@ -2,6 +2,7 @@ package me.mullp.server;
 
 import me.mullp.MinefortApi;
 import me.mullp.reply.server.MyServersReply;
+import me.mullp.reply.server.NameAvailableReply;
 import me.mullp.reply.server.ServersReply;
 import me.mullp.util.OrderType;
 import me.mullp.util.Utilities;
@@ -19,6 +20,7 @@ public class ServerManager {
 
   /**
    * Get a list of online servers
+   *
    * @return - A list of servers
    */
   public @NotNull CompletableFuture<List<Server>> getOnlineServers() {
@@ -27,13 +29,14 @@ public class ServerManager {
 
   /**
    * Get a list of online servers
+   *
    * @param limit - The maximum amount of servers to return
-   * @param skip - The amount of servers to skip
+   * @param skip  - The amount of servers to skip
    * @param order - The order to sort the servers by
    * @return - A list of servers
    */
   public @NotNull CompletableFuture<List<Server>> getOnlineServers(int limit, int skip, @NotNull OrderType order) {
-    String json = "{\"pagination\":{\"skip\":" +
+    final String json = "{\"pagination\":{\"skip\":" +
         skip +
         ",\"limit\":" +
         limit +
@@ -47,11 +50,20 @@ public class ServerManager {
 
   /**
    * Get a list of all servers that the user owns
+   *
    * @return - A list of servers
    */
   public @NotNull CompletableFuture<List<MyServer>> getMyServers() {
     return this.minefortApi.getHttpClient().makeAuthenticatedGetRequest(MinefortApi.BASE_URL + "user/servers")
         .thenApply(this.minefortApi::checkResponse)
         .thenApply(response -> Utilities.GSON.fromJson(response.getBody(), MyServersReply.class).getServers());
+  }
+
+  public @NotNull CompletableFuture<Boolean> isNameAvailable(@NotNull String serverName) {
+    final String json = "{\"serverName\":\"" + serverName + "\"}";
+
+    return this.minefortApi.getHttpClient().makeAuthenticatedPostRequest(MinefortApi.BASE_URL + "server/availability", json)
+        .thenApply(this.minefortApi::checkResponse)
+        .thenApply(minefortHttpResponse -> Utilities.GSON.fromJson(minefortHttpResponse.getBody(), NameAvailableReply.class).isAvailable());
   }
 }

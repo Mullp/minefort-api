@@ -4,6 +4,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -43,7 +44,8 @@ public class ApacheHttpClient implements MinefortHttpClient {
   public CompletableFuture<MinefortHttpResponse> makeGetRequest(String url) {
     return CompletableFuture.supplyAsync(() -> {
       try {
-        HttpResponse response = this.httpClient.execute(new HttpPost(url));
+        final HttpResponse response = this.httpClient.execute(new HttpPost(url));
+
         return new MinefortHttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8), response.getAllHeaders());
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -55,11 +57,10 @@ public class ApacheHttpClient implements MinefortHttpClient {
   public CompletableFuture<MinefortHttpResponse> makePostRequest(String url, String json) {
     return CompletableFuture.supplyAsync(() -> {
       try {
-        HttpPost request = new HttpPost(url);
-        StringEntity stringEntity = new StringEntity(json);
-        request.setEntity(stringEntity);
-        request.setHeader("Content-type", "application/json");
-        HttpResponse response = this.httpClient.execute(request);
+        final HttpPost request = new HttpPost(url);
+        request.setEntity(new StringEntity(json));
+        request.setHeader("Content-type", ContentType.APPLICATION_JSON.toString());
+        final HttpResponse response = this.httpClient.execute(request);
 
         return new MinefortHttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8), response.getAllHeaders());
       } catch (IOException e) {
@@ -72,9 +73,10 @@ public class ApacheHttpClient implements MinefortHttpClient {
   public CompletableFuture<MinefortHttpResponse> makeAuthenticatedGetRequest(String url) {
     return CompletableFuture.supplyAsync(() -> {
       try {
-        HttpGet request = new HttpGet(url);
+        final HttpGet request = new HttpGet(url);
         request.setHeader("Cookie", this.getSessionToken());
-        HttpResponse response = this.httpClient.execute(request);
+        final HttpResponse response = this.httpClient.execute(request);
+
         return new MinefortHttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8), response.getAllHeaders());
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -84,7 +86,19 @@ public class ApacheHttpClient implements MinefortHttpClient {
 
   @Override
   public CompletableFuture<MinefortHttpResponse> makeAuthenticatedPostRequest(String url, String json) {
-    return null;
+    return CompletableFuture.supplyAsync(() -> {
+      try {
+        final HttpPost request = new HttpPost(url);
+        request.setEntity(new StringEntity(json));
+        request.setHeader("Cookie", this.getSessionToken());
+        request.setHeader("Content-type", ContentType.APPLICATION_JSON.toString());
+        final HttpResponse response = this.httpClient.execute(request);
+
+        return new MinefortHttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8), response.getAllHeaders());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }, this.executorService);
   }
 
   @Override
