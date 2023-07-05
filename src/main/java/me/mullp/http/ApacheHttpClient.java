@@ -18,12 +18,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ApacheHttpClient implements MinefortHttpClient {
-  private final @NotNull ExecutorService executorService;
+  private final @NotNull ExecutorService pool;
   private final @NotNull HttpClient httpClient;
   private @Nullable String sessionToken;
 
   public ApacheHttpClient(@Nullable String sessionToken) {
-    this.executorService = Executors.newCachedThreadPool();
+    this.pool = Executors.newCachedThreadPool();
     this.httpClient = HttpClientBuilder.create().disableCookieManagement().setUserAgent(DEFAULT_USER_AGENT).build();
     this.sessionToken = sessionToken;
   }
@@ -50,7 +50,7 @@ public class ApacheHttpClient implements MinefortHttpClient {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-    }, this.executorService);
+    }, this.pool);
   }
 
   @Override
@@ -66,7 +66,7 @@ public class ApacheHttpClient implements MinefortHttpClient {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-    }, this.executorService);
+    }, this.pool);
   }
 
   @Override
@@ -81,7 +81,7 @@ public class ApacheHttpClient implements MinefortHttpClient {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-    }, this.executorService);
+    }, this.pool);
   }
 
   @Override
@@ -98,11 +98,11 @@ public class ApacheHttpClient implements MinefortHttpClient {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-    }, this.executorService);
+    }, this.pool);
   }
 
   @Override
   public void shutdown() {
-    this.executorService.shutdown();
+    this.pool.shutdown();
   }
 }
